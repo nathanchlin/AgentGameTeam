@@ -26,15 +26,15 @@ export class Entity {
     this.components.set(component.constructor.name, component);
   }
 
-  getComponent<T extends Component>(componentClass: new (...args: unknown[]) => T): T | undefined {
+  getComponent<T extends Component>(componentClass: abstract new (...args: any[]) => T): T | undefined {
     return this.components.get(componentClass.name) as T | undefined;
   }
 
-  hasComponent(componentClass: new (...args: unknown[]) => Component): boolean {
+  hasComponent(componentClass: abstract new (...args: any[]) => Component): boolean {
     return this.components.has(componentClass.name);
   }
 
-  removeComponent(componentClass: new (...args: unknown[]) => Component): void {
+  removeComponent(componentClass: abstract new (...args: any[]) => Component): void {
     this.components.delete(componentClass.name);
   }
 

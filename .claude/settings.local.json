@@ -4,7 +4,9 @@
       "WebSearch",
       "Bash(cd:*)",
       "Bash(rm:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "Bash(cd D:/AIProject/AgentGameTeam && npx tsc --noEmit 2>&1)",
+      "Bash(cd D:/AIProject/AgentGameTeam && npm run build 2>&1)"
     ]
   }
 }

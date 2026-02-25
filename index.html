@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agent Game Team</title>
+  <title>Snake Game - Agent Team</title>
   <style>
     * {
       margin: 0;
@@ -37,12 +37,23 @@
     #ui-overlay > * {
       pointer-events: auto;
     }
+    .instructions {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #64748b;
+      font-size: 14px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <div id="game-container">
     <canvas id="game-canvas"></canvas>
-    <div id="ui-overlay"></div>
+    <div id="ui-overlay">
+      <div class="instructions">Use Arrow Keys or WASD to move</div>
+    </div>
   </div>
   <script type="module" src="/src/main.ts"></script>
 </body>
