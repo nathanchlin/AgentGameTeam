@@ -1,0 +1,57 @@
+{
+  "project": "Agent Game Team",
+  "version": "0.1.0",
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Design",
+      "description": "Game design and documentation",
+      "tasks": ["gdd-creation", "architecture-review"]
+    },
+    {
+      "id": "phase-2",
+      "name": "Foundation",
+      "description": "Core engine and systems",
+      "tasks": ["engine-setup", "ecs-implementation", "base-assets"]
+    },
+    {
+      "id": "phase-3",
+      "name": "Core Features",
+      "description": "Essential game features",
+      "tasks": ["ui-system", "physics-system", "level-data"]
+    },
+    {
+      "id": "phase-4",
+      "name": "Game Features",
+      "description": "Game-specific mechanics",
+      "tasks": []
+    },
+    {
+      "id": "phase-5",
+      "name": "Polish",
+      "description": "Testing and optimization",
+      "tasks": ["testing", "bug-fixes", "release-prep"]
+    }
+  ],
+  "priorities": {
+    "critical": 1,
+    "high": 2,
+    "medium": 3,
+    "low": 4
+  },
+  "statuses": ["pending", "in_progress", "blocked", "completed", "cancelled"],
+  "taskTemplates": {
+    "feature": {
+      "fields": ["description", "acceptance_criteria", "technical_notes"],
+      "defaultPriority": "medium"
+    },
+    "bug": {
+      "fields": ["description", "steps_to_reproduce", "expected_behavior"],
+      "defaultPriority": "high"
+    },
+    "refactor": {
+      "fields": ["description", "reason", "impact"],
+      "defaultPriority": "low"
+    }
+  }
+}

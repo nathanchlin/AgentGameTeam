@@ -1,0 +1,97 @@
+{
+  "name": "game-dev-team",
+  "description": "Multi-agent game development team",
+  "created": "2026-02-25",
+  "members": [
+    {
+      "name": "team-lead",
+      "role": "Team Lead",
+      "agentType": "general-purpose",
+      "description": "Project coordination and task management",
+      "capabilities": [
+        "task_management",
+        "code_review",
+        "coordination",
+        "planning"
+      ],
+      "tools": ["TaskCreate", "TaskUpdate", "TaskList", "SendMessage", "Read", "Glob", "Grep"]
+    },
+    {
+      "name": "game-designer",
+      "role": "Game Designer",
+      "agentType": "general-purpose",
+      "description": "Game mechanics and level design",
+      "capabilities": [
+        "game_design",
+        "documentation",
+        "level_design",
+        "balance"
+      ],
+      "tools": ["Read", "Write", "Edit", "Glob", "Grep", "AskUserQuestion", "SendMessage"]
+    },
+    {
+      "name": "frontend-dev",
+      "role": "Frontend Developer",
+      "agentType": "general-purpose",
+      "description": "Rendering and UI development",
+      "capabilities": [
+        "canvas_rendering",
+        "ui_development",
+        "animation",
+        "performance"
+      ],
+      "tools": ["Read", "Write", "Edit", "Bash", "Glob", "Grep", "SendMessage"]
+    },
+    {
+      "name": "logic-dev",
+      "role": "Game Logic Developer",
+      "agentType": "general-purpose",
+      "description": "Game logic and physics systems",
+      "capabilities": [
+        "ecs_architecture",
+        "physics",
+        "ai_behavior",
+        "state_management"
+      ],
+      "tools": ["Read", "Write", "Edit", "Bash", "Glob", "Grep", "SendMessage"]
+    },
+    {
+      "name": "asset-creator",
+      "role": "Asset Creator",
+      "agentType": "general-purpose",
+      "description": "Graphics and data asset creation",
+      "capabilities": [
+        "svg_graphics",
+        "json_data",
+        "procedural_generation",
+        "asset_optimization"
+      ],
+      "tools": ["Write", "Read", "Glob", "Grep", "SendMessage"]
+    },
+    {
+      "name": "tester",
+      "role": "Tester",
+      "agentType": "general-purpose",
+      "description": "Quality assurance and testing",
+      "capabilities": [
+        "unit_testing",
+        "e2e_testing",
+        "bug_reporting",
+        "test_planning"
+      ],
+      "tools": ["Read", "Write", "Edit", "Bash", "Glob", "Grep", "SendMessage"]
+    }
+  ],
+  "workflow": {
+    "communicationChannel": "SendMessage",
+    "taskAssignment": "TaskUpdate",
+    "progressTracking": "TaskList",
+    "coordinationLead": "team-lead"
+  },
+  "conventions": {
+    "codeStyle": "TypeScript strict mode",
+    "testingFramework": "Jest + Playwright",
+    "documentationFormat": "Markdown",
+    "assetFormat": "SVG + JSON"
+  }
+}
