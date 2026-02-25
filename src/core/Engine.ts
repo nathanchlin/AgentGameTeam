@@ -121,4 +121,17 @@ export class Engine {
   getContext(): CanvasRenderingContext2D {
     return this.ctx;
   }
+
+  getCanvas(): HTMLCanvasElement {
+    return this.canvas;
+  }
+
+  getConfig(): EngineConfig {
+    return {
+      width: this.width,
+      height: this.height,
+      canvasId: this.canvas.id,
+      targetFPS: 60,
+    };
+  }
 }

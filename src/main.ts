@@ -1,5 +1,6 @@
 import { Engine } from './core/Engine';
 import { GameScene } from './scenes/GameScene';
+import { BulletHellScene } from './scenes/BulletHellScene';
 
 // Game configuration
 const config = {
@@ -16,17 +17,28 @@ async function main() {
   try {
     await engine.initialize();
 
-    // Create and register game scene
-    const gameScene = new GameScene(engine);
-    engine.addScene('game', gameScene);
+    // Get game mode from URL params or default to bullet hell
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameMode = urlParams.get('game') || 'bulletHell';
 
-    // Switch to game scene
-    engine.switchScene('game');
+    if (gameMode === 'snake') {
+      // Create and register snake game scene
+      const gameScene = new GameScene(engine);
+      engine.addScene('game', gameScene);
+      engine.switchScene('game');
+      console.log('Snake game started successfully');
+      console.log('Use Arrow Keys or WASD to control the snake');
+    } else {
+      // Create and register bullet hell game scene (default)
+      const bulletHellScene = new BulletHellScene(engine);
+      engine.addScene('bulletHell', bulletHellScene);
+      engine.switchScene('bulletHell');
+      console.log('Spirit Painter bullet hell game started successfully');
+      console.log('Use WASD to move, Space or Z to shoot');
+    }
 
     // Start the engine
     engine.start();
-    console.log('Snake game started successfully');
-    console.log('Use Arrow Keys or WASD to control the snake');
   } catch (error) {
     console.error('Failed to start game engine:', error);
   }
