@@ -55,6 +55,8 @@ export class BulletHellScene extends Scene {
   private gameTime: number = 0;
   private gameStarted: boolean = false;
   private playerGlowPhase: number = 0;
+  private retryCount: number = 0;
+  private gameOverTime: number = 0;
 
   // Waves configuration - increasingly difficult
   private waves: WaveConfig[] = [
@@ -153,6 +155,14 @@ export class BulletHellScene extends Scene {
 
     // Clear entities
     this.entities = [];
+
+    // Reset game state for next entry
+    this.retryCount = 0;
+    this.score = 0;
+    this.lives = 3;
+    this.currentWave = 0;
+    this.gameStarted = false;
+    this.isGameOver = false;
   }
 
   private initializeSystems(): void {
@@ -356,11 +366,15 @@ export class BulletHellScene extends Scene {
 
   private gameOver(): void {
     this.isGameOver = true;
+    this.gameOverTime = this.gameTime;
     this.eventBus.emit('game:over', { score: this.score, wave: this.currentWave + 1 });
     console.log(`Game Over! Final Score: ${this.score}, Wave: ${this.currentWave + 1}`);
   }
 
   private restart(): void {
+    // Increment retry count
+    this.retryCount++;
+
     // Reset game state
     this.score = 0;
     this.lives = 3;
@@ -369,6 +383,9 @@ export class BulletHellScene extends Scene {
     this.isGameOver = false;
     this.gameTime = 0;
     this.gameStarted = true;
+
+    // Clear all entities except player and score
+    this.entities = this.entities.filter(e => e === this.player || e === this.scoreEntity);
 
     // Clear enemies and bullets
     this.bulletMovementSystem.clearBullets();
@@ -388,6 +405,12 @@ export class BulletHellScene extends Scene {
 
     // Emit score update
     this.eventBus.emit('score:updated', { score: this.score });
+
+    // Spawn first wave
+    this.spawnWave(this.currentWave);
+    this.eventBus.emit('wave:started', { wave: this.currentWave + 1 });
+
+    console.log(`Retry #${this.retryCount} - Good luck!`);
   }
 
   update(deltaTime: number): void {
@@ -411,14 +434,17 @@ export class BulletHellScene extends Scene {
     }
 
     if (this.isGameOver) {
-      // Check for restart input
-      if (this.keysPressed && this.keysPressed.has('KeyR')) {
-        this.restart();
-      }
-      // Check for return home input
+      // Check for return home input first
       if (this.keysPressed && this.keysPressed.has('Escape')) {
         this.keysPressed.delete('Escape');
         this.eventBus.emit('game:return_home');
+        return;
+      }
+      // Any other key triggers retry (after small delay to prevent accidental retry)
+      const timeSinceGameOver = this.gameTime - this.gameOverTime;
+      if (this.keysPressed.size > 0 && timeSinceGameOver > 0.5) {
+        this.keysPressed.clear();
+        this.restart();
       }
       return;
     }
@@ -580,26 +606,82 @@ export class BulletHellScene extends Scene {
   private renderGameOver(ctx: CanvasRenderingContext2D): void {
     const { width, height } = this.engine.getConfig();
 
-    // Semi-transparent overlay
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    // Semi-transparent overlay with ink splash effect
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
     ctx.fillRect(0, 0, width, height);
 
+    // Red ink splash decoration
+    this.drawInkSplash(ctx, width / 2, height / 2 - 60, 80);
+
     // Game Over text
-    ctx.font = '48px "SimSun", "STSong", serif';
+    ctx.font = '56px "SimSun", "STSong", serif';
     ctx.fillStyle = '#c41e3a';
     ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', width / 2, height / 2 - 40);
+    ctx.fillText('游戏结束', width / 2, height / 2 - 60);
+
+    // Stats box
+    const boxY = height / 2;
+    ctx.fillStyle = 'rgba(245, 240, 230, 0.1)';
+    ctx.fillRect(width / 2 - 150, boxY - 20, 300, 100);
 
     // Final score
-    ctx.font = '28px "SimSun", "STSong", serif';
+    ctx.font = '26px "SimSun", "STSong", serif';
     ctx.fillStyle = '#f5f5dc';
-    ctx.fillText(`Final Score: ${this.score}`, width / 2, height / 2 + 10);
-    ctx.fillText(`Wave: ${this.currentWave + 1}`, width / 2, height / 2 + 50);
+    ctx.fillText(`最终得分: ${this.score}`, width / 2, boxY + 15);
 
-    // Restart instruction
-    ctx.font = '20px "SimSun", "STSong", serif';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText('Press R to Restart | Press Escape to Return Home', width / 2, height / 2 + 100);
+    // Wave reached
+    ctx.font = '22px "SimSun", "STSong", serif';
+    ctx.fillStyle = '#d4d4d4';
+    ctx.fillText(`到达波次: ${this.currentWave + 1}`, width / 2, boxY + 50);
+
+    // Retry count
+    if (this.retryCount > 0) {
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText(`重试次数: ${this.retryCount}`, width / 2, boxY + 85);
+    }
+
+    // Blinking retry prompt
+    const timeSinceGameOver = this.gameTime - this.gameOverTime;
+    if (timeSinceGameOver > 0.5) {
+      const blinkAlpha = 0.5 + Math.sin(this.gameTime * 5) * 0.5;
+      ctx.font = '24px "SimSun", "STSong", serif';
+      ctx.fillStyle = `rgba(59, 130, 246, ${blinkAlpha})`;
+      ctx.fillText('按任意键重试', width / 2, height / 2 + 130);
+    } else {
+      // Countdown display
+      const countdown = Math.ceil(0.5 - timeSinceGameOver);
+      ctx.font = '20px "SimSun", "STSong", serif';
+      ctx.fillStyle = 'rgba(150, 150, 150, 0.7)';
+      ctx.fillText(`准备重试...`, width / 2, height / 2 + 130);
+    }
+
+    // Return home instruction
+    ctx.font = '18px "SimSun", "STSong", serif';
+    ctx.fillStyle = '#9ca3af';
+    ctx.fillText('按 ESC 返回主页', width / 2, height / 2 + 170);
+  }
+
+  private drawInkSplash(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+    ctx.save();
+
+    // Draw decorative ink splash behind game over text
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = '#c41e3a';
+
+    // Random blob shapes
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * Math.PI * 2;
+      const dist = size * 0.6;
+      const blobX = x + Math.cos(angle) * dist;
+      const blobY = y - 20 + Math.sin(angle) * dist * 0.5;
+      const blobSize = size * (0.3 + Math.random() * 0.2);
+
+      ctx.beginPath();
+      ctx.arc(blobX, blobY, blobSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
   }
 
   private renderStartScreen(ctx: CanvasRenderingContext2D): void {
