@@ -11,6 +11,8 @@ export class EnemyAISystem {
   private enemies: Entity[] = [];
   private player: Entity | null = null;
   private gameTime: number = 0;
+  private currentWave: number = 1;
+  private difficultyMultiplier: number = 1.0;
 
   constructor(eventBus: EventBus) {
     this.eventBus = eventBus;
@@ -18,6 +20,12 @@ export class EnemyAISystem {
 
   setPlayer(player: Entity): void {
     this.player = player;
+  }
+
+  setWave(wave: number): void {
+    this.currentWave = wave;
+    // Difficulty increases each wave: 1.0 -> 1.2 -> 1.4 -> 1.6...
+    this.difficultyMultiplier = 1.0 + (wave - 1) * 0.2;
   }
 
   addEnemy(enemy: Entity): void {
@@ -174,15 +182,23 @@ export class EnemyAISystem {
   }
 
   private getBulletCount(enemyType: string, pattern: PatternType): number {
+    const baseCount = this.getBaseBulletCount(enemyType, pattern);
+    // Scale with wave difficulty, cap at 3x
+    return Math.floor(baseCount * Math.min(this.difficultyMultiplier, 3.0));
+  }
+
+  private getBaseBulletCount(enemyType: string, pattern: PatternType): number {
     switch (pattern) {
       case PatternType.SPREAD:
-        return enemyType === 'paper_demon' ? 5 : 3;
+        return enemyType === 'paper_demon' ? 7 : 5;
       case PatternType.SPIRAL:
-        return 8;
+        return 12;
       case PatternType.BURST:
-        return 4;
+        return 6;
+      case PatternType.AIMED:
+        return 3;
       default:
-        return 1;
+        return 2;
     }
   }
 

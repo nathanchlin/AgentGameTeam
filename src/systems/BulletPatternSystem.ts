@@ -22,10 +22,10 @@ export class BulletPatternSystem {
   constructor(eventBus: EventBus, private bulletMovementSystem: { addBullet: (e: Entity) => void }) {
     this.eventBus = eventBus;
 
-    // Create bullet pool
+    // Create bullet pool with larger capacity for bullet hell
     this.bulletPool = new ObjectPool<Entity>(
       () => this.createBulletEntity(),
-      100, // Pre-warm 100 bullets
+      300, // Pre-warm 300 bullets for intense bullet hell
       (bullet) => this.resetBullet(bullet)
     );
 

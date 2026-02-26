@@ -56,42 +56,53 @@ export class BulletHellScene extends Scene {
   private gameStarted: boolean = false;
   private playerGlowPhase: number = 0;
 
-  // Waves configuration
+  // Waves configuration - increasingly difficult
   private waves: WaveConfig[] = [
-    // Wave 1: Simple ink blobs
+    // Wave 1: Introduction - light bullet patterns
     {
       enemies: [
-        { type: 'ink_blob', count: 3, movePattern: 'horizontal', shootPattern: PatternType.STRAIGHT, x: 200, y: 100 },
-        { type: 'ink_blob', count: 2, movePattern: 'vertical', shootPattern: PatternType.STRAIGHT, x: 600, y: 150 },
+        { type: 'ink_blob', count: 4, movePattern: 'horizontal', shootPattern: PatternType.SPREAD, x: 200, y: 100 },
+        { type: 'ink_blob', count: 3, movePattern: 'vertical', shootPattern: PatternType.SPREAD, x: 600, y: 150 },
       ],
     },
-    // Wave 2: More ink blobs + paper demon
+    // Wave 2: More ink blobs + spiral patterns
     {
       enemies: [
-        { type: 'ink_blob', count: 2, movePattern: 'horizontal', shootPattern: PatternType.SPREAD, x: 150, y: 80 },
-        { type: 'ink_blob', count: 2, movePattern: 'horizontal', shootPattern: PatternType.SPREAD, x: 650, y: 80 },
-        { type: 'paper_demon', count: 1, movePattern: 'diagonal', shootPattern: PatternType.AIMED, x: 400, y: 100 },
+        { type: 'ink_blob', count: 3, movePattern: 'horizontal', shootPattern: PatternType.SPIRAL, x: 150, y: 80 },
+        { type: 'ink_blob', count: 3, movePattern: 'horizontal', shootPattern: PatternType.SPIRAL, x: 650, y: 80 },
+        { type: 'paper_demon', count: 2, movePattern: 'diagonal', shootPattern: PatternType.SPREAD, x: 400, y: 100 },
       ],
     },
-    // Wave 3: Spiral enemies
+    // Wave 3: Spread + Aimed combination
     {
       enemies: [
-        { type: 'ink_blob', count: 3, movePattern: 'sine_wave', shootPattern: PatternType.SPIRAL, x: 100, y: 50 },
-        { type: 'paper_demon', count: 2, movePattern: 'horizontal', shootPattern: PatternType.SPREAD, x: 400, y: 120 },
+        { type: 'ink_blob', count: 4, movePattern: 'sine_wave', shootPattern: PatternType.SPREAD, x: 100, y: 50 },
+        { type: 'ink_blob', count: 4, movePattern: 'sine_wave', shootPattern: PatternType.SPREAD, x: 700, y: 50 },
+        { type: 'paper_demon', count: 2, movePattern: 'horizontal', shootPattern: PatternType.AIMED, x: 400, y: 120 },
       ],
     },
-    // Wave 4: Chasing enemies
+    // Wave 4: Heavy spiral assault
     {
       enemies: [
-        { type: 'ink_blob', count: 4, movePattern: 'chase', shootPattern: PatternType.AIMED, x: 100, y: 50 },
-        { type: 'paper_demon', count: 2, movePattern: 'diagonal', shootPattern: PatternType.BURST, x: 400, y: 100 },
+        { type: 'paper_demon', count: 3, movePattern: 'diagonal', shootPattern: PatternType.SPIRAL, x: 200, y: 80 },
+        { type: 'paper_demon', count: 3, movePattern: 'diagonal', shootPattern: PatternType.SPIRAL, x: 600, y: 80 },
+        { type: 'ink_blob', count: 5, movePattern: 'chase', shootPattern: PatternType.AIMED, x: 400, y: 50 },
       ],
     },
-    // Wave 5: Boss wave
+    // Wave 5: Bullet hell chaos
     {
       enemies: [
-        { type: 'paper_demon', count: 5, movePattern: 'diagonal', shootPattern: PatternType.SPIRAL, x: 400, y: 100 },
-        { type: 'ink_blob', count: 5, movePattern: 'sine_wave', shootPattern: PatternType.SPREAD, x: 200, y: 60 },
+        { type: 'paper_demon', count: 4, movePattern: 'diagonal', shootPattern: PatternType.BURST, x: 200, y: 100 },
+        { type: 'paper_demon', count: 4, movePattern: 'diagonal', shootPattern: PatternType.BURST, x: 600, y: 100 },
+        { type: 'ink_blob', count: 6, movePattern: 'sine_wave', shootPattern: PatternType.SPIRAL, x: 400, y: 60 },
+      ],
+    },
+    // Wave 6+: Maximum chaos (loops back)
+    {
+      enemies: [
+        { type: 'paper_demon', count: 5, movePattern: 'diagonal', shootPattern: PatternType.SPIRAL, x: 400, y: 80 },
+        { type: 'ink_blob', count: 8, movePattern: 'sine_wave', shootPattern: PatternType.SPREAD, x: 200, y: 50 },
+        { type: 'ink_blob', count: 8, movePattern: 'chase', shootPattern: PatternType.AIMED, x: 600, y: 50 },
       ],
     },
   ];
@@ -269,6 +280,9 @@ export class BulletHellScene extends Scene {
       this.currentWave = 0;
     }
 
+    // Update enemy AI system with current wave for difficulty scaling
+    this.enemyAISystem.setWave(waveIndex + 1);
+
     const wave = this.waves[waveIndex];
 
     for (const enemyConfig of wave.enemies) {
@@ -321,11 +335,11 @@ export class BulletHellScene extends Scene {
     );
     enemy.addComponent(
       new ShooterComponent(
-        isPaperDemon ? 1.5 : 2.0,
+        isPaperDemon ? 0.8 : 1.0, // Faster fire rate
         shootPattern,
         isPaperDemon ? 180 : 200,
         isPaperDemon ? 15 : 10,
-        shootPattern === PatternType.BURST ? 3 : 1
+        shootPattern === PatternType.BURST ? 5 : 1
       )
     );
     enemy.addComponent(

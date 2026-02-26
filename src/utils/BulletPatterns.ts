@@ -151,10 +151,10 @@ function generateSpiralPattern(config: PatternConfig): BulletVelocity[] {
     speed,
     damage,
     owner,
-    spiral = { angularSpeed: Math.PI / 8, arms: 1 }
+    spiral = { angularSpeed: Math.PI / 8, arms: 3 }
   } = config;
 
-  const { angularSpeed = Math.PI / 8, arms = 1 } = spiral;
+  const { angularSpeed = Math.PI / 8, arms = 3 } = spiral;
   const bulletsPerArm = Math.floor(bulletCount / arms);
 
   const bullets: BulletVelocity[] = [];
@@ -180,7 +180,7 @@ function generateSpiralPattern(config: PatternConfig): BulletVelocity[] {
  * Generate an aimed bullet pattern (targets specific position)
  */
 function generateAimedPattern(config: PatternConfig): BulletVelocity[] {
-  const { bulletCount, source, target, speed, damage, owner } = config;
+  const { bulletCount, source, target, speed, damage, owner, spreadAngle = Math.PI / 12 } = config;
 
   if (!target) {
     console.warn('Aimed pattern requires target position');
@@ -192,14 +192,21 @@ function generateAimedPattern(config: PatternConfig): BulletVelocity[] {
   const dy = target.y - source.y;
   const targetAngle = Math.atan2(dy, dx);
 
-  // For aimed pattern, create multiple bullets converging on target
-  return Array.from({ length: bulletCount }, () => ({
-    vx: Math.cos(targetAngle) * speed,
-    vy: Math.sin(targetAngle) * speed,
-    angle: targetAngle,
-    damage,
-    owner
-  }));
+  // For aimed pattern, create bullets aimed at target with slight spread
+  const halfSpread = spreadAngle / 2;
+  const startAngle = targetAngle - halfSpread;
+  const angleStep = bulletCount > 1 ? spreadAngle / (bulletCount - 1) : 0;
+
+  return Array.from({ length: bulletCount }, (_, i) => {
+    const bulletAngle = bulletCount > 1 ? startAngle + angleStep * i : targetAngle;
+    return {
+      vx: Math.cos(bulletAngle) * speed,
+      vy: Math.sin(bulletAngle) * speed,
+      angle: bulletAngle,
+      damage,
+      owner
+    };
+  });
 }
 
 /**
