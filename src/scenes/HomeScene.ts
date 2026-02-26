@@ -30,6 +30,10 @@ export class HomeScene extends Scene {
   private gridCols = 3;
   private hoveredIndex: number = -1;
 
+  // Scroll
+  private scrollY: number = 0;
+  private maxScrollY: number = 0;
+
   // Animation
   private animationTime = 0;
   private decorationParticles: { x: number; y: number; vx: number; vy: number; size: number; alpha: number }[] = [];
@@ -46,6 +50,7 @@ export class HomeScene extends Scene {
     this.games = this.registry.getAllGames();
     this.selectedIndex = 0;
     this.hoveredIndex = -1;
+    this.scrollY = 0;
     this.animationTime = 0;
     this.calculateGrid();
     this.setupEventHandlers();
@@ -58,11 +63,18 @@ export class HomeScene extends Scene {
     this.eventBus.off('keydown', this.handleKeyDown);
     this.eventBus.off('click', this.handleClick);
     this.eventBus.off('mousemove', this.handleMouseMove);
+    this.eventBus.off('wheel', this.handleWheel);
   }
 
   private calculateGrid(): void {
     const totalWidth = this.engine.width - this.cardPadding * 2;
     this.gridCols = Math.max(1, Math.floor(totalWidth / (this.cardWidth + this.cardPadding)));
+
+    // Calculate max scroll based on content height
+    const totalRows = Math.ceil(this.games.length / this.gridCols);
+    const contentHeight = totalRows * (this.cardHeight + this.cardPadding);
+    const visibleHeight = this.engine.height - this.gridStartY - 40; // minus hints area
+    this.maxScrollY = Math.max(0, contentHeight - visibleHeight);
   }
 
   private initDecorationParticles(): void {
@@ -83,6 +95,7 @@ export class HomeScene extends Scene {
     this.eventBus.on('keydown', this.handleKeyDown);
     this.eventBus.on('click', this.handleClick);
     this.eventBus.on('mousemove', this.handleMouseMove);
+    this.eventBus.on('wheel', this.handleWheel);
   }
 
   private handleKeyDown = (data: { key: string }): void => {
@@ -128,11 +141,15 @@ export class HomeScene extends Scene {
     this.hoveredIndex = this.getCardAtPosition(data.x, data.y);
   };
 
+  private handleWheel = (data: { deltaY: number }): void => {
+    this.scrollY = Math.max(0, Math.min(this.maxScrollY, this.scrollY + data.deltaY * 0.5));
+  };
+
   private getCardAtPosition(x: number, y: number): number {
     for (let i = 0; i < this.games.length; i++) {
       const pos = this.getCardPosition(i);
       const cardX = pos.col * (this.cardWidth + this.cardPadding) + this.cardPadding;
-      const cardY = pos.row * (this.cardHeight + this.cardPadding) + this.gridStartY;
+      const cardY = pos.row * (this.cardHeight + this.cardPadding) + this.gridStartY - this.scrollY;
 
       if (x >= cardX && x <= cardX + this.cardWidth && y >= cardY && y <= cardY + this.cardHeight) {
         return i;
@@ -209,6 +226,9 @@ export class HomeScene extends Scene {
     // Draw game cards
     this.drawCards(ctx);
 
+    // Draw scrollbar if needed
+    this.drawScrollbar(ctx);
+
     // Draw navigation hints
     this.drawHints(ctx);
   }
@@ -258,12 +278,44 @@ export class HomeScene extends Scene {
     for (let i = 0; i < this.games.length; i++) {
       const pos = this.getCardPosition(i);
       const x = pos.col * (this.cardWidth + this.cardPadding) + this.cardPadding;
-      const y = pos.row * (this.cardHeight + this.cardPadding) + this.gridStartY;
+      const y = pos.row * (this.cardHeight + this.cardPadding) + this.gridStartY - this.scrollY;
+
+      // Skip cards that are completely off-screen
+      if (y + this.cardHeight < this.gridStartY || y > this.engine.height - 40) continue;
+
       const isSelected = i === this.selectedIndex;
       const isHovered = i === this.hoveredIndex;
 
       this.drawCard(ctx, x, y, this.games[i], isSelected, isHovered);
     }
+  }
+
+  private drawScrollbar(ctx: CanvasRenderingContext2D): void {
+    if (this.maxScrollY <= 0) return;
+
+    ctx.save();
+
+    const scrollbarWidth = 6;
+    const scrollbarX = this.engine.width - scrollbarWidth - 10;
+    const scrollbarY = this.gridStartY;
+    const scrollbarHeight = this.engine.height - this.gridStartY - 50;
+
+    // Track
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.roundRect(scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight, 3);
+    ctx.fill();
+
+    // Thumb
+    const thumbHeight = Math.max(30, (scrollbarHeight / (scrollbarHeight + this.maxScrollY)) * scrollbarHeight);
+    const thumbY = scrollbarY + (this.scrollY / this.maxScrollY) * (scrollbarHeight - thumbHeight);
+
+    ctx.fillStyle = '#475569';
+    ctx.beginPath();
+    ctx.roundRect(scrollbarX, thumbY, scrollbarWidth, thumbHeight, 3);
+    ctx.fill();
+
+    ctx.restore();
   }
 
   private drawCard(ctx: CanvasRenderingContext2D, x: number, y: number, game: GameMeta, isSelected: boolean, isHovered: boolean): void {
@@ -549,7 +601,10 @@ export class HomeScene extends Scene {
     ctx.textAlign = 'center';
     ctx.fillStyle = '#475569';
     ctx.font = '14px "Segoe UI", sans-serif';
-    ctx.fillText('↑↓←→ / WASD: Navigate  |  Enter / Click: Select  |  Escape: Return to Home', this.engine.width / 2, this.engine.height - 20);
+    const hintText = this.maxScrollY > 0
+      ? '↑↓←→ / WASD: Navigate  |  Scroll: View More  |  Enter / Click: Select  |  Esc: Home'
+      : '↑↓←→ / WASD: Navigate  |  Enter / Click: Select  |  Escape: Return to Home';
+    ctx.fillText(hintText, this.engine.width / 2, this.engine.height - 20);
     ctx.restore();
   }
 }

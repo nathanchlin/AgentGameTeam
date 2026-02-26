@@ -73,6 +73,11 @@ export class Engine {
       const y = e.clientY - rect.top;
       this.eventBus.emit('mousemove', { x, y });
     });
+
+    this.canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      this.eventBus.emit('wheel', { deltaY: e.deltaY, deltaX: e.deltaX });
+    });
   }
 
   private async loadAssets(): Promise<void> {
