@@ -66,6 +66,13 @@ export class Engine {
       const y = e.clientY - rect.top;
       this.eventBus.emit('click', { x, y });
     });
+
+    this.canvas.addEventListener('mousemove', (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      this.eventBus.emit('mousemove', { x, y });
+    });
   }
 
   private async loadAssets(): Promise<void> {
@@ -110,8 +117,24 @@ export class Engine {
     if (!scene) {
       throw new Error(`Scene "${name}" not found`);
     }
+    // Exit current scene before switching
+    if (this.currentScene) {
+      this.currentScene.exit();
+    }
     this.currentScene = scene;
     this.currentScene.enter();
+  }
+
+  hasScene(name: string): boolean {
+    return this.scenes.has(name);
+  }
+
+  removeScene(name: string): boolean {
+    if (this.currentScene && this.scenes.get(name) === this.currentScene) {
+      this.currentScene.exit();
+      this.currentScene = null;
+    }
+    return this.scenes.delete(name);
   }
 
   getEventBus(): EventBus {

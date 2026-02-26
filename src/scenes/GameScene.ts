@@ -31,7 +31,7 @@ export class GameScene extends Scene {
 
   private gridSize = 20;
   private isGameOver = false;
-  private restartHandler?: () => void;
+  private restartHandler?: (data: { key: string }) => void;
 
   constructor(engine: Engine) {
     super('GameScene');
@@ -181,9 +181,13 @@ export class GameScene extends Scene {
     // Show game over overlay
     this.showGameOverOverlay();
 
-    // Setup restart handler
-    this.restartHandler = () => {
-      this.engine.getEventBus().emit('restart');
+    // Setup key handler for restart and return home
+    this.restartHandler = (data: { key: string }) => {
+      if (data.key === 'Escape') {
+        this.engine.getEventBus().emit('game:return_home');
+      } else if (data.key === 'r' || data.key === 'R') {
+        this.engine.getEventBus().emit('restart');
+      }
     };
     this.engine.getEventBus().on('keydown', this.restartHandler);
     this.engine.getEventBus().once('restart', () => {
@@ -247,8 +251,8 @@ export class GameScene extends Scene {
     ctx.font = '24px "Segoe UI", sans-serif';
     ctx.fillText(`Score: ${score.score}`, this.engine.width / 2, this.engine.height / 2 + 20);
 
-    ctx.font = '18px "Segoe UI", sans-serif';
+    ctx.font = '16px "Segoe UI", sans-serif';
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText('Press any key to restart', this.engine.width / 2, this.engine.height / 2 + 60);
+    ctx.fillText('Press R to restart | Press Escape to return home', this.engine.width / 2, this.engine.height / 2 + 60);
   }
 }

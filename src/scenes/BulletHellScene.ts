@@ -378,6 +378,11 @@ export class BulletHellScene extends Scene {
       if (this.keysPressed && this.keysPressed.has('KeyR')) {
         this.restart();
       }
+      // Check for return home input
+      if (this.keysPressed && this.keysPressed.has('Escape')) {
+        this.keysPressed.delete('Escape');
+        this.eventBus.emit('game:return_home');
+      }
       return;
     }
 
@@ -530,6 +535,6 @@ export class BulletHellScene extends Scene {
     // Restart instruction
     ctx.font = '20px "SimSun", "STSong", serif';
     ctx.fillStyle = '#ffffff';
-    ctx.fillText('Press R to Restart', width / 2, height / 2 + 100);
+    ctx.fillText('Press R to Restart | Press Escape to Return Home', width / 2, height / 2 + 100);
   }
 }

@@ -383,7 +383,7 @@ export class TetrisBattleScene extends Scene {
         if (!this.isGameOver) return;
         if (data.key === 'r' || data.key === 'R') {
           this.restartGame();
-        } else if (data.key === 'm' || data.key === 'M') {
+        } else if (data.key === 'm' || data.key === 'M' || data.key === 'Escape') {
           this.returnToMenu();
         }
       })
@@ -458,7 +458,7 @@ export class TetrisBattleScene extends Scene {
     // Restart hint
     ctx.fillStyle = '#666';
     ctx.font = '16px "Segoe UI", sans-serif';
-    ctx.fillText('Press R to restart | Press M for menu', this.engine.width / 2, this.engine.height / 2 + 70);
+    ctx.fillText('Press R to restart | Press M or Escape to return home', this.engine.width / 2, this.engine.height / 2 + 70);
   }
 
   private renderPause(ctx: CanvasRenderingContext2D): void {
