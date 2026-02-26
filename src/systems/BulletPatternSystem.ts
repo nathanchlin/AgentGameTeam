@@ -137,11 +137,18 @@ export class BulletPatternSystem {
       collider.layer = owner === 'player' ? CollisionLayer.PLAYER_BULLET : CollisionLayer.ENEMY_BULLET;
     }
 
-    // Sprite - color based on owner
+    // Sprite - color based on owner (blue for player, red for enemy)
     const sprite = bullet.getComponent(SpriteComponent);
     if (sprite) {
-      sprite.color = owner === 'player' ? '#1a1a1a' : '#4a0000'; // Black for player, dark red for enemy
-      sprite.size = owner === 'player' ? 6 : 5;
+      if (owner === 'player') {
+        sprite.color = '#3b82f6'; // Blue for player bullets
+        sprite.size = 8;
+        sprite.style = { ...sprite.style, strokeStyle: '#1d4ed8', lineWidth: 2 };
+      } else {
+        sprite.color = '#dc2626'; // Bright red for enemy bullets
+        sprite.size = 7;
+        sprite.style = { ...sprite.style, strokeStyle: '#991b1b', lineWidth: 1 };
+      }
     }
 
     // Track active bullet

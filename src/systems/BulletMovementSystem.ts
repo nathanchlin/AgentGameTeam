@@ -43,7 +43,7 @@ export class BulletMovementSystem {
     this.bullets = [];
   }
 
-  update(_deltaTime: number): void {
+  update(deltaTime: number): void {
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const bullet = this.bullets[i];
 
@@ -58,6 +58,9 @@ export class BulletMovementSystem {
       if (!velocity || !projectile) {
         continue;
       }
+
+      // Update bullet entity to trigger VelocityComponent movement
+      bullet.update(deltaTime);
 
       // Check if bullet is expired
       if (projectile.isExpired() || !projectile.isActive) {
@@ -76,10 +79,11 @@ export class BulletMovementSystem {
       }
 
       // Bullet movement is handled by VelocityComponent.update()
-      // Just emit trail particle event occasionally
-      if (Math.random() < 0.1) {
+      // Just emit trail particle event occasionally (reduced frequency)
+      if (Math.random() < 0.05) {
         const owner = projectile.owner;
-        const color = owner === 'player' ? '#1a1a1a' : '#4a0000';
+        // Light blue for player, light red for enemy trails
+        const color = owner === 'player' ? '#93c5fd' : '#fca5a5';
         this.eventBus.emit('bullet:trail', {
           x: bullet.x,
           y: bullet.y,

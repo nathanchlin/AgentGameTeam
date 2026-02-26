@@ -53,6 +53,8 @@ export class BulletHellScene extends Scene {
   private waveDelay: number = 3.0; // seconds between waves
   private isGameOver: boolean = false;
   private gameTime: number = 0;
+  private gameStarted: boolean = false;
+  private playerGlowPhase: number = 0;
 
   // Waves configuration
   private waves: WaveConfig[] = [
@@ -160,13 +162,13 @@ export class BulletHellScene extends Scene {
   private createPlayer(): void {
     this.player = new Entity('player', 400, 500);
 
-    // Add components
+    // Add components - Player uses blue color for visibility
     this.player.addComponent(new VelocityComponent(0, 0, 250));
     this.player.addComponent(new HealthComponent(100, this.lives));
     this.player.addComponent(new ColliderComponent(15, CollisionLayer.PLAYER));
     this.player.addComponent(
-      new SpriteComponent(SpriteShape.INK_BRUSH, '#1a1a1a', 25, {
-        strokeStyle: '#2a2a2a',
+      new SpriteComponent(SpriteShape.INK_BRUSH, '#2563eb', 25, {
+        strokeStyle: '#1d4ed8',
         lineWidth: 2,
       })
     );
@@ -210,10 +212,11 @@ export class BulletHellScene extends Scene {
 
       shooter.recordShot(now);
 
-      // Register bullet with collision system (handled via event)
+      // Register bullet with collision system and add to scene for rendering
       this.eventBus.once('bullet:created', (data: { bullet: Entity }) => {
         if (data.bullet) {
           this.bulletCollisionSystem.registerBullet(data.bullet);
+          this.addEntity(data.bullet);
         }
       });
     });
@@ -224,6 +227,7 @@ export class BulletHellScene extends Scene {
       this.eventBus.once('bullet:created', (data: { bullet: Entity }) => {
         if (data.bullet) {
           this.bulletCollisionSystem.registerBullet(data.bullet);
+          this.addEntity(data.bullet);
         }
       });
     });
@@ -303,13 +307,14 @@ export class BulletHellScene extends Scene {
     enemy.addComponent(
       new ColliderComponent(isPaperDemon ? 20 : 12, CollisionLayer.ENEMY)
     );
+    // ink_blob uses dark gray with red border to distinguish from player
     enemy.addComponent(
       new SpriteComponent(
         isPaperDemon ? SpriteShape.PAPER_DEMON : SpriteShape.INK_SPLASH,
-        isPaperDemon ? '#f5f5dc' : '#1a1a1a',
+        isPaperDemon ? '#f5f5dc' : '#374151',
         isPaperDemon ? 30 : 15,
         {
-          strokeStyle: isPaperDemon ? '#8b4513' : '#2a2a2a',
+          strokeStyle: isPaperDemon ? '#8b4513' : '#dc2626',
           lineWidth: 2,
         }
       )
@@ -349,6 +354,7 @@ export class BulletHellScene extends Scene {
     this.waveTimer = 0;
     this.isGameOver = false;
     this.gameTime = 0;
+    this.gameStarted = true;
 
     // Clear enemies and bullets
     this.bulletMovementSystem.clearBullets();
@@ -372,6 +378,23 @@ export class BulletHellScene extends Scene {
 
   update(deltaTime: number): void {
     this.gameTime += deltaTime;
+
+    // Update player glow animation
+    this.playerGlowPhase += deltaTime * 3;
+
+    // Start screen - wait for any key press
+    if (!this.gameStarted) {
+      if (this.keysPressed.size > 0) {
+        this.gameStarted = true;
+        this.keysPressed.clear();
+        // Spawn first wave immediately when game starts
+        this.currentWave = 0;
+        this.spawnWave(this.currentWave);
+        this.waveTimer = 0;
+        this.eventBus.emit('wave:started', { wave: this.currentWave + 1 });
+      }
+      return;
+    }
 
     if (this.isGameOver) {
       // Check for restart input
@@ -434,11 +457,33 @@ export class BulletHellScene extends Scene {
     // Render base entities (player, enemies)
     super.render(ctx);
 
+    // Render player glow effect
+    if (this.player && this.player.isActive && this.gameStarted) {
+      this.drawPlayerGlow(ctx);
+    }
+
     // Render particles
     this.particleEffectSystem.render(ctx);
 
     // Render UI
     this.renderUI(ctx);
+
+    // Render start screen
+    if (!this.gameStarted) {
+      this.renderStartScreen(ctx);
+    }
+  }
+
+  private drawPlayerGlow(ctx: CanvasRenderingContext2D): void {
+    const glowIntensity = 0.3 + Math.sin(this.playerGlowPhase) * 0.15;
+    const glowSize = 30 + Math.sin(this.playerGlowPhase) * 5;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(this.player.x, this.player.y, glowSize, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(37, 99, 235, ${glowIntensity})`;
+    ctx.fill();
+    ctx.restore();
   }
 
   private drawPaperTexture(ctx: CanvasRenderingContext2D, width: number, height: number): void {
@@ -484,6 +529,11 @@ export class BulletHellScene extends Scene {
     ctx.textAlign = 'center';
     ctx.font = '18px "SimSun", "STSong", serif';
     ctx.fillText(`Wave ${this.currentWave + 1}`, 400, 35);
+
+    // Control hints at bottom
+    ctx.font = '14px "SimSun", "STSong", serif';
+    ctx.fillStyle = 'rgba(26, 26, 26, 0.5)';
+    ctx.fillText('WASD 移动 | 空格/Z 射击 | 躲避红色弹幕', 400, 585);
 
     // Game Over screen
     if (this.isGameOver) {
@@ -536,5 +586,43 @@ export class BulletHellScene extends Scene {
     ctx.font = '20px "SimSun", "STSong", serif';
     ctx.fillStyle = '#ffffff';
     ctx.fillText('Press R to Restart | Press Escape to Return Home', width / 2, height / 2 + 100);
+  }
+
+  private renderStartScreen(ctx: CanvasRenderingContext2D): void {
+    const { width, height } = this.engine.getConfig();
+
+    // Semi-transparent overlay
+    ctx.fillStyle = 'rgba(245, 240, 230, 0.9)';
+    ctx.fillRect(0, 0, width, height);
+
+    // Game title with ink brush style
+    ctx.font = '64px "SimSun", "STSong", serif';
+    ctx.fillStyle = '#1a1a1a';
+    ctx.textAlign = 'center';
+    ctx.fillText('水墨弹幕', width / 2, height / 2 - 100);
+
+    // Subtitle
+    ctx.font = '24px "SimSun", "STSong", serif';
+    ctx.fillStyle = '#374151';
+    ctx.fillText('Spirit Painter', width / 2, height / 2 - 60);
+
+    // Controls
+    ctx.font = '20px "SimSun", "STSong", serif';
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillText('【操作说明】', width / 2, height / 2);
+    ctx.fillText('WASD - 移动画笔', width / 2, height / 2 + 35);
+    ctx.fillText('空格 / Z - 射击墨弹', width / 2, height / 2 + 65);
+
+    // Objective
+    ctx.fillStyle = '#c41e3a';
+    ctx.fillText('【目标】', width / 2, height / 2 + 110);
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillText('消灭所有敌人，躲避红色弹幕！', width / 2, height / 2 + 145);
+
+    // Start prompt with blinking effect
+    const blinkAlpha = 0.5 + Math.sin(this.gameTime * 4) * 0.5;
+    ctx.font = '22px "SimSun", "STSong", serif';
+    ctx.fillStyle = `rgba(37, 99, 235, ${blinkAlpha})`;
+    ctx.fillText('按任意键开始游戏', width / 2, height / 2 + 210);
   }
 }

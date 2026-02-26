@@ -167,11 +167,14 @@ export class BulletCollisionSystem {
   }
 
   private flashSprite(sprite: SpriteComponent): void {
+    const originalColor = sprite.color;
     const originalOpacity = sprite.opacity;
-    sprite.opacity = 0.3;
+    sprite.color = '#ffffff'; // Flash white for better visibility
+    sprite.opacity = 1;
     setTimeout(() => {
+      sprite.color = originalColor;
       sprite.opacity = originalOpacity;
-    }, 50);
+    }, 100); // Increased from 50ms to 100ms for better feedback
   }
 
   clear(): void {
