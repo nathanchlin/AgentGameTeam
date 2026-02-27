@@ -67,6 +67,20 @@ export class Engine {
       this.eventBus.emit('click', { x, y });
     });
 
+    this.canvas.addEventListener('mousedown', (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      this.eventBus.emit('mousedown', { x, y });
+    });
+
+    this.canvas.addEventListener('mouseup', (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      this.eventBus.emit('mouseup', { x, y });
+    });
+
     this.canvas.addEventListener('mousemove', (e) => {
       const rect = this.canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
