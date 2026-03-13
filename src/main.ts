@@ -12,6 +12,7 @@ import { MatchThreeScene } from './scenes/MatchThreeScene';
 import { BreakoutScene } from './scenes/BreakoutScene';
 import { MinesweeperScene } from './scenes/MinesweeperScene';
 import { BackpackWarScene } from './scenes/BackpackWarScene';
+import { SpaceBulletHellScene } from './scenes/SpaceBulletHellScene';
 import type { AIDifficulty } from './components/tetris/AIConfigComponent';
 
 // Game configuration
@@ -245,6 +246,23 @@ function registerGames(engine: Engine, registry: GameRegistry): void {
       controls: ['Click/Drag: Place items', 'Space: Start battle', 'ESC: Cancel/Menu'],
     },
     () => new BackpackWarScene(engine)
+  );
+
+  // Space Bullet Hell game
+  registry.register(
+    {
+      id: 'spaceBulletHell',
+      name: 'Cosmic Barrage',
+      nameZh: '星际弹幕',
+      description: 'Epic space bullet hell shooter with 3 boss battles and intense bullet patterns.',
+      descriptionZh: '史诗级太空弹幕射击游戏，3个Boss战和密集弹幕。',
+      category: 'action',
+      tags: ['shooter', 'bullet-hell', 'boss', 'space'],
+      difficulty: 'hard',
+      estimatedPlayTime: '10-20 min',
+      controls: ['WASD: Move', 'Space/Z: Shoot'],
+    },
+    () => new SpaceBulletHellScene(engine)
   );
 
   console.log(`Registered ${registry.getGameCount()} games`);
